@@ -5,12 +5,12 @@ const Mongoose = require("mongoose");
 const Bcrypt = require("bcrypt");
 const Jwt = require("jsonwebtoken");
 
-//import schema file
+//...........................................import schema file.........................................................
 const userModel = require("./models/user");
 const timeTracker = require("./models/timeTracker")
 const project = require("./models/project");
 const task = require("./models/task")
-// const postModel = require("./models/post")
+
 //create a variable
 const app = Express();
 
@@ -18,14 +18,13 @@ app.use(Express.urlencoded({ extended: true })); //body-parser
 app.use(Express.json());                         //body-parser
 app.use(Cors());
 
-// mongoDB Connection
+//.............................................. mongoDB Connection.....................................................
 Mongoose.connect("mongodb+srv://test:test@cluster0.clsirok.mongodb.net/ProjectDB?retryWrites=true&w=majority", { useNewUrlParser: true })
 
 //..............................................Sign-In API......................................................
 app.post("/signin", (req, res) => {
     let getEmail = req.body.email;
     let password = req.body.password;
-
     let result = userModel.find({ email: getEmail }, (err, data) => {
         if (data.length > 0) {
             const passwordValidator = Bcrypt.compareSync(password, data[0].password)
@@ -59,7 +58,7 @@ app.post("/addemployee", async (req, res) => {
 
     Jwt.verify(req.body.token, "clockintime", (err, decoded) => {
         if (decoded && decoded.email) {
-            let data = new userModel({ userName: req.body.userName, email: req.body.email, password: Bcrypt.hashSync(req.body.password, 10) })
+            let data = new userModel({ userName: req.body.userName, email: req.body.email, password: Bcrypt.hashSync(req.body.password, 10), role: req.body.role })
             data.save();
             res.json({ "Status": "sucessfully added" });
         }
@@ -71,7 +70,7 @@ app.post("/addemployee", async (req, res) => {
 
 
     // console.log(req.body); // to check req.body
-    // let data = new userModel({ userName: req.body.userName, email: req.body.email, password: Bcrypt.hashSync(req.body.password, 10) });
+    // let data = new userModel({ userName: req.body.userName, email: req.body.email, password: Bcrypt.hashSync(req.body.password, 10),role: req.body.role});
     // await data.save();
     // res.json({ "Status": "success", "Status": data });
 })
