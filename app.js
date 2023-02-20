@@ -4,6 +4,7 @@ const Cors = require("cors");
 const Mongoose = require("mongoose");
 const Bcrypt = require("bcrypt");
 const Jwt = require("jsonwebtoken");
+const moment=require("moment");
 
 //...........................................import schema file.........................................................
 const userModel = require("./models/user");
@@ -86,15 +87,31 @@ app.post("/addemployee", async (req, res) => {
     })
 
 })
+//..............................................view employee API Start ......................................................
+app.post("/employee", async (req, res) => {
+
+    Jwt.verify(req.body.token, "clockintimeadmin", (err, decoded) => {
+        if (decoded && decoded.email) {
+            userModel.find((err, data) => {
+                if (err) console.log(err);
+                else res.json(data);
+            });
+        }
+        else {
+            res.json({ "Status": "Unauthorised" });
+        }
+    })
+
+})
 
 
 //..............................................Time Tracker API......................................................
 
 app.post("/timetracker", (req, res) => {
     console.log(req.body);
-    let data = new timeTracker({ empmail: req.body.empmail, tproject: req.body.tproject, ttask: req.body.ttask, tdes:req.body.tdes, tmeth:req.body.tmeth,tstart: req.body.tstart, tend: req.body.tend })
+    let data = new timeTracker({ empmail: req.body.empmail, tproject: req.body.tproject, ttask: req.body.ttask, tdes:req.body.tdes, tmeth:req.body.tmeth,tstart: req.body.tstart, tend: moment().format('MMMM Do YYYY, h:mm:ss a') })
     data.save();
-    res.json({ "Status": "sucessfully added" });
+    res.json({ "Status": "sucessfully added","data":data });
 
     //delete till here.
     // Jwt.verify(req.body.token, "clockintime", (err, decoded) => {
