@@ -11,15 +11,19 @@ const trackerSchema = new MongooseSchema(
   ttask: {
     type: String,
   },
+  tdes:{
+    type: String,
+  },
+  tmeth:{
+    type: String,
+  },
   tstart: {
     type: String,
   },
   tend: {
     type: String,
-  },
-  tdur: {
-    type: String,
   }
+ 
   
 });
 var timeTracker = Mongoose.model("timetrackers", trackerSchema)

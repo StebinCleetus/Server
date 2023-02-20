@@ -28,19 +28,37 @@ app.post("/signin", (req, res) => {
     let result = userModel.find({ email: getEmail }, (err, data) => {
         if (data.length > 0) {
             const passwordValidator = Bcrypt.compareSync(password, data[0].password)
+            
             if (passwordValidator) {
-                //token generation for Authentication
-                Jwt.sign({ email: getEmail, id: data[0]._id }, "clockintime", { expiresIn: "1d" },
+
+                if (data[0].role=="admin") {
+                    Jwt.sign({ email: getEmail, id: data[0]._id }, "clockintimeadmin", { expiresIn: "1d" },
                     (err, token) => {
                         if (err) {
                             res.json({ "status": "Error", "error": err })
                         }
                         else {
-
+    
                             res.json({ "status": "Sucess", "data": data, "token": token })
                         }
                     }
                 )
+                
+                } else {
+                    //token generation for Authentication
+                Jwt.sign({ email: getEmail, id: data[0]._id }, "clockintime", { expiresIn: "1d" },
+                (err, token) => {
+                    if (err) {
+                        res.json({ "status": "Error", "error": err })
+                    }
+                    else {
+
+                        res.json({ "status": "Sucess", "data": data, "token": token })
+                    }
+                }
+            )
+                }
+                
             } else {
                 res.json({ "status": "failed", "data": "Invalid Password" })
             }
@@ -56,7 +74,7 @@ app.post("/signin", (req, res) => {
 
 app.post("/addemployee", async (req, res) => {
 
-    Jwt.verify(req.body.token, "clockintime", (err, decoded) => {
+    Jwt.verify(req.body.token, "clockintimeadmin", (err, decoded) => {
         if (decoded && decoded.email) {
             let data = new userModel({ userName: req.body.userName, email: req.body.email, password: Bcrypt.hashSync(req.body.password, 10), role: req.body.role })
             data.save();
@@ -67,12 +85,6 @@ app.post("/addemployee", async (req, res) => {
         }
     })
 
-
-
-    // console.log(req.body); // to check req.body
-    // let data = new userModel({ userName: req.body.userName, email: req.body.email, password: Bcrypt.hashSync(req.body.password, 10),role: req.body.role});
-    // await data.save();
-    // res.json({ "Status": "success", "Status": data });
 })
 
 
@@ -80,7 +92,7 @@ app.post("/addemployee", async (req, res) => {
 
 app.post("/timetracker", (req, res) => {
     console.log(req.body);
-    let data = new timeTracker({ empmail: req.body.empmail, tproject: req.body.tproject, ttask: req.body.ttask, tstart: req.body.tstart, tend: req.body.tend, tdur: req.body.tdur })
+    let data = new timeTracker({ empmail: req.body.empmail, tproject: req.body.tproject, ttask: req.body.ttask, tdes:req.body.tdes, tmeth:req.body.tmeth,tstart: req.body.tstart, tend: req.body.tend })
     data.save();
     res.json({ "Status": "sucessfully added" });
 
@@ -99,18 +111,51 @@ app.post("/timetracker", (req, res) => {
 
 
 //..............................................Project API......................................................
-app.post("/project", async (req, res) => {
-    let data = new project({ pname: req.body.pname });
-    await data.save();
-    res.json({ "Status": "success", "Status": data });
+app.post("/project", (req, res) => {
+    Jwt.verify(req.body.token, "clockintimeadmin", (err, decoded) => {
+        if (decoded && decoded.email) {
+            let data = new project({ pname: req.body.pname });
+            data.save();
+            res.json({ "Status": "sucessfully added" });
+        }
+        else {
+            res.json({ "Status": "Unauthorised" });
+        }
+    })
 })
+
+app.get('/project', (req, res) => {
+    project.find((err, data) => {
+        if (err) console.log(err);
+        else res.json(data);
+    });
+});
+
+//..............................................Project API end......................................................
 
 //..............................................Task API......................................................
 app.post("/task", async (req, res) => {
-    let data = new task({ tname: req.body.tname });
-    await data.save();
-    res.json({ "Status": "success", "Status": data });
+
+    Jwt.verify(req.body.token, "clockintimeadmin", (err, decoded) => {
+        if (decoded && decoded.email) {
+            let data = new task({ tname: req.body.tname });
+            data.save();
+            res.json({ "Status": "sucessfully added" });
+        }
+        else {
+            res.json({ "Status": "Unauthorised" });
+        }
+    })
 })
+
+app.get('/task', (req, res) => {
+    task.find((err, data) => {
+        if (err) console.log(err);
+        else res.json(data);
+    });
+});
+
+//..............................................Task API end......................................................
 
 
 app.listen(3001, () => {
