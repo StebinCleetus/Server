@@ -4,7 +4,7 @@ const Cors = require("cors");
 const Mongoose = require("mongoose");
 const Bcrypt = require("bcrypt");
 const Jwt = require("jsonwebtoken");
-const moment=require("moment");
+const moment = require("moment");
 
 //...........................................import schema file.........................................................
 const userModel = require("./models/user");
@@ -29,37 +29,37 @@ app.post("/signin", (req, res) => {
     let result = userModel.find({ email: getEmail }, (err, data) => {
         if (data.length > 0) {
             const passwordValidator = Bcrypt.compareSync(password, data[0].password)
-            
+
             if (passwordValidator) {
 
-                if (data[0].role=="admin") {
+                if (data[0].role == "admin") {
                     Jwt.sign({ email: getEmail, id: data[0]._id }, "clockintimeadmin", { expiresIn: "1d" },
-                    (err, token) => {
-                        if (err) {
-                            res.json({ "status": "Error", "error": err })
+                        (err, token) => {
+                            if (err) {
+                                res.json({ "status": "Error", "error": err })
+                            }
+                            else {
+
+                                res.json({ "status": "Sucess", "data": data, "token": token })
+                            }
                         }
-                        else {
-    
-                            res.json({ "status": "Sucess", "data": data, "token": token })
-                        }
-                    }
-                )
-                
+                    )
+
                 } else {
                     //token generation for Authentication
-                Jwt.sign({ email: getEmail, id: data[0]._id }, "clockintime", { expiresIn: "1d" },
-                (err, token) => {
-                    if (err) {
-                        res.json({ "status": "Error", "error": err })
-                    }
-                    else {
+                    Jwt.sign({ email: getEmail, id: data[0]._id }, "clockintime", { expiresIn: "1d" },
+                        (err, token) => {
+                            if (err) {
+                                res.json({ "status": "Error", "error": err })
+                            }
+                            else {
 
-                        res.json({ "status": "Sucess", "data": data, "token": token })
-                    }
+                                res.json({ "status": "Sucess", "data": data, "token": token })
+                            }
+                        }
+                    )
                 }
-            )
-                }
-                
+
             } else {
                 res.json({ "status": "failed", "data": "Invalid Password" })
             }
@@ -104,14 +104,61 @@ app.post("/employee", async (req, res) => {
 
 })
 
+//..............................................view employee progress API (individual) ......................................................
+app.get('/progress/:email', (req, res) => {
+    let email = req.params.email;
+    timeTracker.find({ empmail: email }, function (err, docs) {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            res.json({ "Status": "sucessfully gotted", "data": docs });
+        }
+    });
+})
+
+//..............................................view employee progress API  ......................................................
+app.get('/progress', (req, res) => {
+
+
+    timeTracker.find(function (err, docs) {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            res.json({ "Status": "sucessfully gotted", "data": docs });
+        }
+    });
+})
+        
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//..............................................view employee progress API ends  ......................................................
 
 //..............................................Time Tracker API......................................................
-
+//..............................................Timer Start...........................................................
 app.post("/timetracker", (req, res) => {
     console.log(req.body);
-    let data = new timeTracker({ empmail: req.body.empmail, tproject: req.body.tproject, ttask: req.body.ttask, tdes:req.body.tdes, tmeth:req.body.tmeth,tstart: req.body.tstart, tend: moment().format('MMMM Do YYYY, h:mm:ss a') })
+    let data = new timeTracker({ empmail: req.body.empmail, tproject: req.body.tproject, ttask: req.body.ttask, tdes: req.body.tdes, tmeth: req.body.tmeth, tstart: moment().format('MMMM Do YYYY, h:mm:ss a'), tend: req.body.tend })
     data.save();
-    res.json({ "Status": "sucessfully added","data":data });
+    res.json({ "Status": "sucessfully added", "data": data });
 
     //delete till here.
     // Jwt.verify(req.body.token, "clockintime", (err, decoded) => {
@@ -125,6 +172,44 @@ app.post("/timetracker", (req, res) => {
     //     }
     // })
 })
+//..............................................timer check update stop.........................................................
+app.put('/timetracker/:id', (req, res) => {
+    let id = req.params.id;
+    timeTracker.findByIdAndUpdate(id, { tend: moment().format('MMMM Do YYYY, h:mm:ss a') },
+        (err, docs) => {
+            if (err) {
+                console.log(err)
+            }
+            else {
+                res.json({ "Status": "sucessfully added", "data": docs });;
+            }
+        })
+})
+//..............................................Timer Stop...........................................................
+// app.post('/timetrackerupdate/:id', (req, res) => {
+
+//     let data = new timeTracker({ _id: req.params.id, empmail: req.body.empmail, tproject: req.body.tproject, ttask: req.body.ttask, tdes: req.body.tdes, tmeth: req.body.tmeth, tstart: req.body.tstart, tend: moment().format('MMMM Do YYYY, h:mm:ss a') })
+//     console.log(data);
+//     let id = req.params.id;
+//     console.log(id);
+//     timeTracker.updateOne({
+//         "_id": id
+//     }, data, (err, data) => {
+//         if (err) {
+//             res.json({
+//                 "status": "failed",
+//                 "Error": err
+//             })
+//         } else {
+//             res.json({
+//                 "status": "sucess",
+//                 "data": data
+//             })
+//         }
+//     });
+
+// });
+
 
 
 //..............................................Project API......................................................
